@@ -71,6 +71,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     const hotelData = {
       ...formData,
       tags: typeof formData.tags === 'string' ? (formData.tags as string).split(',').map((t:string) => t.trim()) : formData.tags,
+      imageUrl: formData.imageUrl?.trim() || '', // Trim whitespace from URL
       rating: Number(formData.rating),
       stars: Number(formData.stars)
     } as Hotel;
@@ -261,8 +262,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   {currentHotels.map(hotel => (
                     <tr key={hotel.id} className="hover:bg-gray-50/50 transition-colors group">
                       <td className="p-5 pl-8">
-                        <div className="text-gray-900 font-bold">{hotel.name}</div>
-                        <div className="text-gray-400 text-xs mt-0.5">{hotel.tags.slice(0, 2).join(', ')}</div>
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-100">
+                            <img 
+                              src={hotel.imageUrl} 
+                              alt={hotel.name} 
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                 const target = e.target as HTMLImageElement;
+                                 target.onerror = null;
+                                 target.src = 'https://placehold.co/100x100?text=No+Img';
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <div className="text-gray-900 font-bold">{hotel.name}</div>
+                            <div className="text-gray-400 text-xs mt-0.5">{hotel.tags.slice(0, 2).join(', ')}</div>
+                          </div>
+                        </div>
                       </td>
                       <td className="p-5">
                         <div className="flex items-center text-yellow-400 text-xs">

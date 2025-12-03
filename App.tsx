@@ -162,9 +162,27 @@ const App: React.FC = () => {
             {/* Main Image - Compact height */}
             <div className="w-full h-64 md:h-[400px] rounded-2xl overflow-hidden shadow-sm bg-gray-100 relative group cursor-pointer mb-6">
                <img 
+                key={selectedHotel.imageUrl} // Ensure fresh mount when hotel changes to reset error handling
                 src={selectedHotel.imageUrl} 
                 alt={selectedHotel.name} 
                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  
+                  // If we already tried the proxy and it failed, revert to placeholder
+                  if (target.src.includes('weserv.nl')) {
+                     target.src = 'https://placehold.co/800x600?text=No+Image';
+                     return;
+                  }
+                  
+                  // If standard placeholder is already set, stop loop
+                  if (target.src.includes('placehold.co')) return;
+
+                  // Attempt to fix mixed content (http on https) or CORS by using weserv proxy
+                  const cleanUrl = selectedHotel.imageUrl.replace(/^https?:\/\//, '');
+                  target.src = `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl)}`;
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-50"></div>
             </div>

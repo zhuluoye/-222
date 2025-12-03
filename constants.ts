@@ -9,7 +9,7 @@ export const INITIAL_HOTELS: Hotel[] = [
     rating: 4.8,
     tags: ['历史悠久', '中央大街', '俄式风情'],
     description: '始建于1906年，位于繁华的中央大街，是哈尔滨地标性建筑，充满浓郁的法式文艺复兴风格。',
-    imageUrl: 'https://picsum.photos/800/600?random=1',
+    imageUrl: 'http://49.233.75.102/img/aa11.jpg',
     bookingUrl: '#',
     priceRange: '¥600 - ¥1200'
   },

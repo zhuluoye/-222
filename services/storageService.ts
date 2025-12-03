@@ -1,7 +1,7 @@
 import { Hotel, LocationType } from '../types';
 import { INITIAL_HOTELS } from '../constants';
 
-const STORAGE_KEY = 'snowland_hotels_data';
+const STORAGE_KEY = 'snowland_hotels_data_v2';
 
 export const getHotels = (): Hotel[] => {
   try {
