@@ -70,7 +70,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-[#F5F5F7] overflow-hidden font-sans">
+    <div className="flex flex-col md:flex-row h-screen bg-[#F5F5F7] overflow-hidden font-sans">
       <Sidebar 
         currentLocation={currentLocation} 
         onSelectLocation={(loc) => {
