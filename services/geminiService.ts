@@ -4,9 +4,17 @@ import { Hotel, LocationType } from "../types";
 // Initialize the API client. 
 // Note: In a real production app, you might proxy this through a backend to hide the key, 
 // or require the user to input their own key if it's a client-side tool.
-// For this demo, we assume process.env.API_KEY is available or we handle the missing key gracefully.
 
-const apiKey = process.env.API_KEY || ''; 
+// Safe access to process.env to prevent "process is not defined" errors in some browser environments
+const getApiKey = () => {
+  try {
+    return typeof process !== 'undefined' ? process.env.API_KEY : '';
+  } catch {
+    return '';
+  }
+};
+
+const apiKey = getApiKey() || '';
 
 // We won't throw immediately to allow the UI to render, but requests will fail if empty.
 const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;

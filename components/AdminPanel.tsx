@@ -25,6 +25,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     rating: 5.0
   });
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Sync form location when category changes
   useEffect(() => {
@@ -57,45 +58,68 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setIsFormOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('确定要删除这个酒店吗？')) {
-      deleteHotel(id);
+  const handleDelete = async (id: string) => {
+    if (confirm('确定要删除这个酒店吗？此操作将同步至云端。')) {
+      setIsSaving(true);
+      await deleteHotel(id);
       onUpdate();
+      setIsSaving(false);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.location) return;
 
+    setIsSaving(true);
     const hotelData = {
       ...formData,
-      tags: typeof formData.tags === 'string' ? (formData.tags as string).split(',').map((t:string) => t.trim()) : formData.tags,
-      imageUrl: formData.imageUrl?.trim() || '', // Trim whitespace from URL
+      tags: typeof formData.tags === 'string' 
+        ? (formData.tags as string).split(',').map((t:string) => t.trim()).filter(Boolean)
+        : (formData.tags || []),
+      imageUrl: formData.imageUrl?.trim() || '', // Trim whitespace
       rating: Number(formData.rating),
       stars: Number(formData.stars)
     } as Hotel;
 
     if (editingId) {
-      updateHotel(hotelData);
+      await updateHotel(hotelData);
     } else {
-      addHotel({ ...hotelData, id: generateId() });
+      await addHotel({ ...hotelData, id: generateId() });
     }
 
     setIsFormOpen(false);
     onUpdate();
+    setIsSaving(false);
   };
 
   const inputClass = "w-full bg-white border border-gray-200 rounded-xl p-3 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm text-gray-800 placeholder-gray-400";
   const labelClass = "block text-sm font-semibold text-gray-700 mb-2";
 
   return (
-    <div className="p-8 max-w-7xl mx-auto h-full flex flex-col">
+    <div className="p-8 max-w-7xl mx-auto h-full flex flex-col relative">
+      {isSaving && (
+        <div className="absolute inset-0 z-50 bg-white/50 backdrop-blur-sm flex items-center justify-center rounded-3xl">
+          <div className="bg-black text-white px-6 py-3 rounded-xl shadow-xl flex items-center gap-3 animate-pulse">
+            <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span className="font-bold text-sm">正在同步云端数据...</span>
+          </div>
+        </div>
+      )}
+
       {/* Header & Actions */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">后台管理</h2>
-          <p className="text-gray-500 mt-1 font-medium">酒店分类与数据维护</p>
+          <h2 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
+            后台管理
+            <span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded-md border border-green-200">
+              ● 云端已连接
+            </span>
+          </h2>
+          <p className="text-gray-500 mt-1 font-medium">数据将自动同步至所有终端</p>
         </div>
         {!isFormOpen && (
           <button 

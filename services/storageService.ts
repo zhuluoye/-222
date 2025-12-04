@@ -3,13 +3,23 @@ import { INITIAL_HOTELS } from '../constants';
 
 const STORAGE_KEY = 'snowland_hotels_data_v2';
 
-export const getHotels = (): Hotel[] => {
+// Simulate network latency for "cloud" feel
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Helper to get data locally (mimics DB fetch)
+const getLocalData = (): Hotel[] => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      return JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+      // Validate that the parsed data is an array and ensure robust properties
+      if (Array.isArray(parsed)) {
+        return parsed.map((h: any) => ({
+          ...h,
+          tags: Array.isArray(h.tags) ? h.tags : [] // Prevent crash if tags is missing or not an array
+        }));
+      }
     }
-    // Seed initial data if empty
     localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_HOTELS));
     return INITIAL_HOTELS;
   } catch (error) {
@@ -18,7 +28,13 @@ export const getHotels = (): Hotel[] => {
   }
 };
 
-export const saveHotels = (hotels: Hotel[]) => {
+export const fetchHotels = async (): Promise<Hotel[]> => {
+  await delay(400); // Simulate cloud fetch latency
+  return getLocalData();
+};
+
+export const saveHotels = async (hotels: Hotel[]) => {
+  await delay(300); // Simulate cloud save latency
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(hotels));
   } catch (error) {
@@ -26,28 +42,29 @@ export const saveHotels = (hotels: Hotel[]) => {
   }
 };
 
-export const addHotel = (hotel: Hotel) => {
-  const current = getHotels();
+export const addHotel = async (hotel: Hotel): Promise<Hotel[]> => {
+  const current = getLocalData();
   const updated = [...current, hotel];
-  saveHotels(updated);
+  await saveHotels(updated);
   return updated;
 };
 
-export const updateHotel = (hotel: Hotel) => {
-  const current = getHotels();
+export const updateHotel = async (hotel: Hotel): Promise<Hotel[]> => {
+  const current = getLocalData();
   const updated = current.map(h => h.id === hotel.id ? hotel : h);
-  saveHotels(updated);
+  await saveHotels(updated);
   return updated;
 };
 
-export const deleteHotel = (id: string) => {
-  const current = getHotels();
+export const deleteHotel = async (id: string): Promise<Hotel[]> => {
+  const current = getLocalData();
   const updated = current.filter(h => h.id !== id);
-  saveHotels(updated);
+  await saveHotels(updated);
   return updated;
 };
 
-export const getHotelsByLocation = (location: LocationType): Hotel[] => {
-  const all = getHotels();
+export const getHotelsByLocation = async (location: LocationType): Promise<Hotel[]> => {
+  await delay(200);
+  const all = getLocalData();
   return all.filter(h => h.location === location);
 };

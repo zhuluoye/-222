@@ -2,14 +2,17 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { HotelCard } from './components/HotelCard';
 import { Modal } from './components/Modal';
+import { LoginModal } from './components/LoginModal';
 import { AdminPanel } from './components/AdminPanel';
 import { Hotel, LocationType } from './types';
-import { getHotels } from './services/storageService';
+import { fetchHotels } from './services/storageService';
 
 const App: React.FC = () => {
   const [currentLocation, setCurrentLocation] = useState<LocationType>('哈尔滨');
   const [allHotels, setAllHotels] = useState<Hotel[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -21,9 +24,11 @@ const App: React.FC = () => {
   });
 
   // Load all hotels initially and when updates happen
-  const loadData = useCallback(() => {
-    const data = getHotels();
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    const data = await fetchHotels();
     setAllHotels(data);
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -54,6 +59,16 @@ const App: React.FC = () => {
     window.open(url, '_blank');
   };
 
+  const handleAdminToggle = () => {
+    if (isAdmin) {
+      // Logout
+      setIsAdmin(false);
+    } else {
+      // Open Login
+      setIsLoginOpen(true);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-[#F5F5F7] overflow-hidden font-sans">
       <Sidebar 
@@ -63,10 +78,19 @@ const App: React.FC = () => {
           setSearchQuery(''); // Clear search when changing location manually
         }}
         isAdmin={isAdmin}
-        onToggleAdmin={() => setIsAdmin(!isAdmin)}
+        onToggleAdmin={handleAdminToggle}
       />
 
       <main className="flex-1 overflow-y-auto relative flex flex-col">
+        {isLoading && !isAdmin ? (
+          <div className="absolute inset-0 z-40 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+             <div className="flex flex-col items-center">
+                <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p className="text-gray-500 font-medium">正在加载云端数据...</p>
+             </div>
+          </div>
+        ) : null}
+
         {isAdmin ? (
           <AdminPanel 
             currentLocation={currentLocation} 
@@ -128,7 +152,7 @@ const App: React.FC = () => {
               ))}
             </div>
 
-            {displayedHotels.length === 0 && (
+            {displayedHotels.length === 0 && !isLoading && (
               <div className="text-center py-24 animate-[fadeIn_0.5s_ease-out]">
                 <div className="text-6xl mb-6 opacity-20">🔍</div>
                 <h3 className="text-xl font-bold text-gray-400">
@@ -150,6 +174,13 @@ const App: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Login Modal */}
+      <LoginModal 
+        isOpen={isLoginOpen}
+        onClose={() => setIsLoginOpen(false)}
+        onLogin={() => setIsAdmin(true)}
+      />
 
       {/* Detail Modal */}
       <Modal 
